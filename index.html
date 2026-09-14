@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>İçme Suyu Hidrolik Hızlı Hesap V27 - Proje Kayıtlı</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background-color: #f4f6f9; margin: 0; padding: 15px; }
+        
+        .login-container { max-width: 400px; margin: 60px auto; background: #fff; padding: 25px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); border-top: 5px solid #154296; }
+        .login-container h2 { text-align: center; color: #154296; margin-top: 0; font-weight: 800; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; color: #333; font-size: 14px; }
+        .form-group input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; }
+        
+        .app-container { max-width: 1200px; margin: 0 auto; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); display: none; }
+        
+        /* PROJE YÖNETİMİ VE AKSİYON BARİ */
+        .action-bar { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 15px; background: #eef3fb; padding: 10px 15px; border-radius: 6px; border: 1px solid #154296; }
+        .project-group { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; width: 100%; justify-content: space-between; }
+        .project-controls { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+        .project-input, .project-select { padding: 8px 12px; font-size: 13px; border: 1px solid #ccc; border-radius: 4px; outline: none; font-weight: 600; }
+        .project-input { min-width: 180px; }
+        
+        .btn-action { padding: 8px 12px; font-size: 13px; font-weight: bold; border: none; border-radius: 4px; cursor: pointer; color: white; transition: 0.2s; }
+        .btn-save { background-color: #28a745; }
+        .btn-save:hover { background-color: #218838; }
+        .btn-delete { background-color: #dc3545; }
+        .btn-delete:hover { background-color: #c82333; }
+        
+        .btn-pdf { background-color: #154296; color: white; padding: 8px 16px; font-size: 13px; font-weight: bold; border: none; border-radius: 4px; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.2); transition: 0.2s; }
+        .btn-pdf:hover { background-color: #0d2b66; }
+        
+        .btn-json { background-color: #6f42c1; color: white; padding: 8px 16px; font-size: 13px; font-weight: bold; border: none; border-radius: 4px; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.2); transition: 0.2s; }
+        .btn-json:hover { background-color: #59339d; }
+
+        /* STANDART EKRAN GÖRÜNÜMÜ (BÜYÜK/OKUNAKLI) */
+        #pdfArea { padding: 10px; background: #fff; width: 100%; margin: 0 auto; transition: all 0.3s ease; }
+
+        .kurumsal-baslik { text-align: center; font-weight: 800; font-size: 13px; color: #000; line-height: 1.4; margin-bottom: 10px; text-transform: uppercase; }
+        .header-container { display: flex; align-items: center; justify-content: center; position: relative; margin-bottom: 15px; border: 2px solid #000; padding: 5px 10px; background: #fff; height: 50px; }
+        .logo-box { position: absolute; left: 10px; display: flex; align-items: center; height: 100%; }
+        .koski-logo-badge { background-color: #154296; color: #ffffff; font-family: 'Arial Black', Arial, sans-serif; font-weight: 900; font-size: 18px; letter-spacing: 1.5px; padding: 4px 12px; border-radius: 3px; display: inline-flex; align-items: center; justify-content: center; border: 1px solid #0d2b66; }
+        .header-title { font-weight: bold; font-size: 18px; color: #000; text-align: center; width: 100%; letter-spacing: 0.5px; }
+        
+        .btn { background-color: #154296; color: white; padding: 12px; border: none; border-radius: 4px; cursor: pointer; width: 100%; font-size: 16px; font-weight: bold; }
+        .btn:hover { background-color: #0d2b66; }
+        .error { color: red; font-size: 13px; margin-top: 10px; text-align: center; font-weight: bold; }
+        
+        .table-responsive { overflow-x: auto; margin-bottom: 10px; -webkit-overflow-scrolling: touch; }
+        table { width: 100%; border-collapse: collapse; table-layout: fixed; border: 2px solid #000; }
+        th, td { border: 1px solid #000; padding: 6px 4px; text-align: center; font-size: 12px; vertical-align: middle; word-wrap: break-word; line-height: 1.2; }
+        th { font-weight: bold; background-color: #ffffff; color: #000; font-size: 11px; padding: 8px 4px; }
+        
+        .th-red { color: #ff0000 !important; }
+        .bg-yellow { background-color: #ffff00 !important; }
+        .bg-green-status { background-color: #92d050 !important; color: #000 !important; font-weight: bold; }
+        .bg-red-status { background-color: #ffc7ce !important; color: #9c0006 !important; font-weight: bold; }
+        .bg-blue { background-color: #00b0f0 !important; color: #000 !important; font-weight: bold; }
+        .bg-orange { background-color: #ffc000 !important; color: #000 !important; font-weight: bold; }
+        .bg-red-atu { background-color: #ff0000 !important; color: #fff !important; font-weight: bold; }
+        .text-red { color: #ff0000 !important; font-weight: bold; }
+        .text-black { color: #000 !important; font-weight: bold; }
+        
+        input.table-input, select.table-select { width: 100%; text-align: center; border: none; background: transparent; font-size: 12px; font-weight: bold; outline: none; font-family: inherit; padding: 2px; }
+        
+        .chart-section { border: 2px solid #000; padding: 10px; background: #fff; margin-bottom: 10px; border-radius: 3px; }
+        .chart-info-card { background: #eef3fb; border: 1px solid #154296; padding: 8px 12px; margin-bottom: 10px; border-radius: 3px; font-size: 12px; color: #000; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; font-weight: 600; }
+        .chart-info-card span { white-space: nowrap; }
+        .chart-container { position: relative; width: 100%; height: 200px; }
+
+        .footer-container { display: flex; justify-content: space-between; margin-top: 15px; padding: 10px 5px 0 5px; font-size: 11px; color: #154296; font-weight: 700; border-top: 2px solid #154296; background: #fff; page-break-inside: avoid; }
+        .footer-version, .footer-author { font-style: italic; }
+
+        /* ==============================================================
+           PDF MODU (Sadece İndirme Esnasında Devreye Girer ve Küçülür) 
+           ============================================================== */
+        .pdf-mode-active {
+            max-width: 1050px !important; 
+            padding: 2px !important;
+        }
+        .pdf-mode-active .kurumsal-baslik { font-size: 10px !important; margin-bottom: 4px !important; }
+        .pdf-mode-active .header-container { height: 32px !important; margin-bottom: 4px !important; border-width: 1px !important; }
+        .pdf-mode-active .koski-logo-badge { font-size: 12px !important; padding: 2px 6px !important; }
+        .pdf-mode-active .header-title { font-size: 13px !important; }
+        
+        .pdf-mode-active th, .pdf-mode-active td { font-size: 8.5px !important; padding: 2px 1px !important; }
+        .pdf-mode-active th { font-size: 8px !important; }
+        .pdf-mode-active input.table-input, .pdf-mode-active select.table-select { font-size: 8.5px !important; padding: 0 !important; }
+        
+        .pdf-mode-active table { border-width: 1px !important; margin-bottom: 2px !important; }
+        .pdf-mode-active .chart-section { padding: 4px !important; margin-bottom: 4px !important; border-width: 1px !important; }
+        .pdf-mode-active .chart-info-card { padding: 3px 6px !important; font-size: 8px !important; margin-bottom: 4px !important; }
+        .pdf-mode-active .chart-container { height: 130px !important; }
+        
+        .pdf-mode-active .footer-container { margin-top: 6px !important; padding-top: 4px !important; font-size: 8px !important; border-top-width: 1px !important;}
+        
+        @media (max-width: 768px) {
+            .app-container { padding: 10px; }
+            .project-controls { width: 100%; justify-content: space-between; }
+            .btn-pdf { width: 100%; margin-top: 5px; }
+            .chart-container { height: 160px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- GİRİŞ EKRANI -->
+    <div id="loginScreen" class="login-container">
+        <h2>KOSKİ Giriş Paneli</h2>
+        <div class="form-group">
+            <label>Kullanıcı Adı</label>
+            <input type="text" id="username" placeholder="kullanici.adi">
+        </div>
+        <div class="form-group">
+            <label>Şifre</label>
+            <input type="password" id="password" placeholder="Şifreniz">
+        </div>
+        <button class="btn" onclick="girisYap()">Giriş Yap</button>
+        <div id="loginError" class="error"></div>
+    </div>
+
+    <!-- HESAPLAMA UYGULAMA EKRANI -->
+    <div id="appScreen" class="app-container">
+        
+        <!-- PROJE KAYIT / YÜKLEME AKSİYON BARİ -->
+        <div class="action-bar">
+            <div class="project-group">
+                <div class="project-controls">
+                    <input type="text" id="projeAdi" placeholder="Proje Adı Giriniz..." class="project-input">
+                    <button class="btn-action btn-save" onclick="projeKaydet()">💾 Kaydet</button>
+                    <select id="projeListesi" class="project-select" onchange="projeYukle()">
+                        <option value="">-- Kayıtlı Projeler --</option>
+                    </select>
+                    <button class="btn-action btn-delete" onclick="projeSil()">🗑️ Sil</button>
+                </div>
+                
+                <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                    <button class="btn-json" onclick="jsonIndir()">⬇️ JSON İndir</button>
+                    <label class="btn-json" style="cursor: pointer; margin: 0; display: inline-flex; align-items: center;">
+                        ⬆️ JSON Yükle
+                        <input type="file" accept=".json" style="display: none;" onchange="jsonYukle(event)">
+                    </label>
+                    <button class="btn-pdf" onclick="pdfIndir()">📄 PDF İndir</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="pdfArea">
+            
+            <div class="kurumsal-baslik">
+                <div>KOSKİ GENEL MÜDÜRLÜĞÜ</div>
+                <div>ETÜT, PLAN VE PROJE DAİRESİ BAŞKANLIĞI</div>
+                <div>SU PLAN PROJE VE TARIMSAL SULAMA ŞUBE MÜDÜRLÜĞÜ</div>
+            </div>
+
+            <div class="header-container">
+                <div class="logo-box">
+                    <div class="koski-logo-badge">KOSKİ</div>
+                </div>
+                <div class="header-title">İÇME SUYU HİDROLİK HIZLI HESAP</div>
+            </div>
+
+            <!-- SATIR 1: GENEL PARAMETRELER VE MALİYET TİPİ -->
+            <div class="table-responsive">
+                <table>
+                    <tr>
+                        <th class="th-red">CAZİBELİ/TERFİLİ</th>
+                        <th class="th-red">MALİYET SEÇİMİ</th>
+                        <th class="th-red">1. KOT (MT)</th>
+                        <th class="th-red">2. KOT (MT)</th>
+                        <th class="th-red">KOT FARKI (MT)</th>
+                        <th class="th-red">HAT UZUNLUĞU (MT)</th>
+                        <th class="th-red">YERSEL YÜK KAYBI (%)</th>
+                        <th class="th-red">DÖKÜŞ BASINCI (MT)</th>
+                    </tr>
+                    <tr>
+                        <td class="bg-yellow">
+                            <select id="akisTipi" class="table-select" onchange="akisTipiDegisti()">
+                                <option value="TERFİLİ">TERFİLİ</option>
+                                <option value="CAZİBELİ">CAZİBELİ</option>
+                            </select>
+                        </td>
+                        <td class="bg-yellow">
+                            <select id="maliyetTipi" class="table-select" onchange="hesapla()">
+                                <option value="FILLER">FİLLER DOLGULU</option>
+                                <option value="GERIDOLGU">GERİ DOLGULU</option>
+                            </select>
+                        </td>
+                        <td class="bg-yellow"><input type="number" id="kot1" class="table-input" value="1040" oninput="hesapla()"></td>
+                        <td class="bg-yellow"><input type="number" id="kot2" class="table-input" value="1000" oninput="hesapla()"></td>
+                        <td id="kotFarki" class="text-black">40</td>
+                        <td class="bg-yellow"><input type="number" id="hatUzunlugu" class="table-input" value="10000" oninput="hesapla()"></td>
+                        <td class="bg-yellow"><input type="number" id="yerselKayipYuzde" class="table-input" value="10" oninput="hesapla()"></td>
+                        <td class="bg-yellow"><input type="number" id="dokusBasinci" class="table-input" value="15" oninput="hesapla()"></td>
+                    </tr>
+                </table>
+            </div>
+
+            <!-- SATIR 2: BORU VE KAPASİTE -->
+            <div class="table-responsive">
+                <table>
+                    <tr>
+                        <th class="th-red">BORU CİNSİ</th>
+                        <th class="th-red">BORU ÇAPI (MM)</th>
+                        <th>İÇ ÇAP (MM)</th>
+                        <th class="th-red">DEBİ (LT/SN)</th>
+                        <th>HIZ (MT/SN)</th>
+                        <th>SABİT HIZ=1 İKEN DEBİ (LT/SN)</th>
+                        <th>Qkapasite (LT/SN)</th>
+                    </tr>
+                    <tr>
+                        <td class="bg-yellow">
+                            <select id="boruCinsi" class="table-select" onchange="boruCinsiDegisti()">
+                                <option value="PE 10 ATÜ">PE 10 ATÜ</option>
+                                <option value="PE 16 ATÜ">PE 16 ATÜ</option>
+                                <option value="DUKTİL">DUKTİL</option>
+                                <option value="ÇELİK">ÇELİK</option>
+                            </select>
+                        </td>
+                        <td class="bg-yellow">
+                            <select id="disCap" class="table-select" onchange="hesapla()">
+                            </select>
+                        </td>
+                        <td id="icCap" class="text-black">141</td>
+                        <td class="bg-yellow"><input type="number" id="debi" class="table-input" value="5" step="0.1" oninput="hesapla()"></td>
+                        <td id="hiz" class="text-black">0,32</td>
+                        <td id="sabitHizDebi" class="text-black">15,61</td>
+                        <td id="qKapasite" class="bg-green-status">11,17</td>
+                    </tr>
+                </table>
+            </div>
+
+            <!-- SATIR 3: HİDROLİK VE ATÜ HESAPLARI -->
+            <div class="table-responsive">
+                <table>
+                    <tr>
+                        <th>HİDROLİK EĞİM, J (MT/MT)</th>
+                        <th>SÜREKLİ YÜK KAYBI JL (MT)</th>
+                        <th>PİYEZOMETRE KOTU (BAŞ) (MT)</th>
+                        <th>PİYEZOMETRE KOTU (SON) (MT)</th>
+                        <th>UÇTA DİNAMİK BASINÇ (MT)</th>
+                        <th>STATİK ATÜ DEĞERİ</th>
+                        <th>DİNAMİK ATÜ DEĞERİ</th>
+                    </tr>
+                    <tr>
+                        <td id="hidrolikEgim" class="text-black">0,0008</td>
+                        <td id="surekliYukKaybi" class="text-black">8,37</td>
+                        <td id="piyezometreBas" class="text-black">1.063,37</td>
+                        <td id="piyezometreSon" class="text-black">1.015,00</td>
+                        <td id="uctaDinamikBasinc" class="bg-green-status">63,37</td>
+                        <td id="statikAtu" class="bg-blue">10 ATÜ</td>
+                        <td id="dinamikAtu" class="bg-blue">10 ATÜ</td>
+                    </tr>
+                </table>
+            </div>
+
+            <!-- DİNAMİK HİDROLİK GRAFİK BÖLÜMÜ -->
+            <div class="chart-section">
+                <div class="chart-info-card" id="chartInfoCard"></div>
+                <div class="chart-container">
+                    <canvas id="hidrolikGrafik"></canvas>
+                </div>
+            </div>
+
+            <!-- SATIR 4: BORU MALİYETLERİ (SEÇİME GÖRE) -->
+            <div class="table-responsive">
+                <table>
+                    <tr>
+                        <th>SEÇİLEN BORU BİRİM FİYAT (TL/MT)</th>
+                        <th>SEÇİLEN BORU YAKLAŞIK İLK YATIRIM MALİYETİ (TL)</th>
+                    </tr>
+                    <tr>
+                        <td id="secilenBirimFiyat" class="text-black">1.975,27</td>
+                        <td id="secilenYaklasikMaliyet" class="text-red">19.752.717,62</td>
+                    </tr>
+                </table>
+            </div>
+
+            <!-- SATIR 5: ENERJİ PARAMETRELERİ VE ANALİZ YILI (TERFİLİ İSE GÖZÜKÜR) -->
+            <div class="table-responsive" id="enerjiTabloBolumu">
+                <table>
+                    <tr>
+                        <th class="th-red">ENERJİ BİRİM MALİYETİ (TL)</th>
+                        <th class="th-red">POMPA ÇALIŞMA GÜNÜ</th>
+                        <th class="th-red">POMPA ÇALIŞMA SAATİ</th>
+                        <th>GÜÇ (kW)</th>
+                        <th>GÜÇ YUVARLAMA (kW)</th>
+                        <th>1 YILLIK ENERJİ GİDERİ (TL)</th>
+                        <th class="th-red">ANALİZ YIL SAYISI</th>
+                        <th>ÖZEL ANALİZ ENERJİ GİDERİ (TL)</th>
+                    </tr>
+                    <tr>
+                        <td class="bg-yellow"><input type="number" id="enerjiBirimMaliyeti" class="table-input" value="5.25" step="0.01" oninput="hesapla()"></td>
+                        <td class="bg-yellow"><input type="number" id="pompaCalismaGunu" class="table-input" value="365" oninput="hesapla()"></td>
+                        <td class="bg-yellow"><input type="number" id="pompaCalismaSaati" class="table-input" value="20" oninput="hesapla()"></td>
+                        <td id="kwHesaplanan" class="text-black">4,27</td>
+                        <td id="kwYuvarlama" class="text-black">5</td>
+                        <td id="enerjiGideri1Yil" class="text-black">191.625</td>
+                        <td class="bg-yellow"><input type="number" id="analizYili" class="table-input" value="35" oninput="hesapla()"></td>
+                        <td id="enerjiGideriAnalizYil" class="text-black">6.706.875</td>
+                    </tr>
+                </table>
+            </div>
+
+            <!-- SATIR 6: TOPLAM İLK YATIRIM MALİYETİ -->
+            <div class="table-responsive" id="toplamYatirimBolumu">
+                <table>
+                    <tr>
+                        <th class="th-red">TOPLAM İLK YATIRIM MALİYETİ (BORU + 1 YILLIK ENERJİ) (TL)</th>
+                        <th>BİRİM METRE MALİYET (TL/MT)</th>
+                    </tr>
+                    <tr>
+                        <td id="toplamIlkYatirim" class="text-red">19.944.343</td>
+                        <td id="birimMetreIlkYatirim" class="text-black">1.994,43</td>
+                    </tr>
+                </table>
+            </div>
+
+            <!-- SATIR 7: ÖZEL ANALİZ YILI TOPLAM MALİYETİ -->
+            <div class="table-responsive" id="analizToplamBolumu">
+                <table>
+                    <tr>
+                        <th class="th-red">SEÇİLEN ANALİZ YILI TOPLAM MALİYETİ (BORU + ÖZEL YIL ENERJİ) (TL)</th>
+                        <th>SEÇİLEN YIL BİRİM METRE MALİYET (TL/MT)</th>
+                    </tr>
+                    <tr>
+                        <td id="toplamAnalizYatirim" class="text-red">26.459.593</td>
+                        <td id="birimMetreAnalizYatirim" class="text-black">2.645,96</td>
+                    </tr>
+                </table>
+            </div>
+
+            <!-- PDF İÇİN GARANTİ İMZA VE VERSİYON ALANI -->
+            <div class="footer-container">
+                <div class="footer-version">Versiyon 27.0 (Akıllı Ekran Uyumlu)</div>
+                <div class="footer-author">Tasarım ve Geliştirme: İbrahim Samast - İnşaat Yüksek Mühendisi</div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        Chart.register(ChartDataLabels);
+        const STORAGE_KEY = 'koski_proje_kayitlari_v26';
+
+        const KULLANICILAR = {
+            "ibrahim.samast": "13817",
+            "fatih.ozbayrak": "f.123",
+            "mert.pinarkara": "m.123",
+            "ahmet.celik": "a.123",
+            "isa.soylu": "i.123",
+            "ahmet.acar": "a.123",
+            "harun.adali": "h.123",
+            "huzeyfe.kaplan": "h.123",
+            "emre.er": "e.123",
+            "ahmet.demir": "a.123",
+            "murat.erdogan": "m.123",
+            "yasar.samast": "y.123"
+        };
+
+        const KATALOG = {
+            "PE 10 ATÜ": {
+                C: 150, limit: 100,
+                caplar: {
+                    40: { icCap: 35.2, filler: 0, geriDolgu: 0 },
+                    50: { icCap: 44, filler: 0, geriDolgu: 0 },
+                    63: { icCap: 55.4, filler: 922.2749, geriDolgu: 516.898 },
+                    75: { icCap: 66, filler: 0, geriDolgu: 0 },
+                    90: { icCap: 79.2, filler: 1253.523, geriDolgu: 849.6589 },
+                    110: { icCap: 96.8, filler: 1417.187, geriDolgu: 1014.787 },
+                    125: { icCap: 110.2, filler: 0, geriDolgu: 0 },
+                    140: { icCap: 123.4, filler: 1774.658, geriDolgu: 1315.675 },
+                    160: { icCap: 141, filler: 1975.272, geriDolgu: 1518.485 },
+                    180: { icCap: 158.6, filler: 0, geriDolgu: 0 },
+                    200: { icCap: 176.2, filler: 2579.021, geriDolgu: 2064.787 },
+                    225: { icCap: 198.2, filler: 0, geriDolgu: 0 },
+                    250: { icCap: 220.4, filler: 3627.711, geriDolgu: 3055.604 },
+                    280: { icCap: 246.8, filler: 0, geriDolgu: 0 },
+                    315: { icCap: 277.6, filler: 5108.532, geriDolgu: 4480.371 },
+                    355: { icCap: 312.8, filler: 0, geriDolgu: 0 },
+                    400: { icCap: 352.6, filler: 0, geriDolgu: 0 },
+                    450: { icCap: 396.6, filler: 0, geriDolgu: 0 },
+                    500: { icCap: 440.6, filler: 0, geriDolgu: 0 },
+                    560: { icCap: 493.6, filler: 0, geriDolgu: 0 },
+                    630: { icCap: 555.2, filler: 0, geriDolgu: 0 },
+                    710: { icCap: 625.8, filler: 0, geriDolgu: 0 },
+                    800: { icCap: 705.2, filler: 0, geriDolgu: 0 },
+                    900: { icCap: 793.4, filler: 0, geriDolgu: 0 },
+                    1000: { icCap: 881.4, filler: 0, geriDolgu: 0 },
+                    1200: { icCap: 1058.8, filler: 0, geriDolgu: 0 },
+                    1400: { icCap: 1235.2, filler: 0, geriDolgu: 0 },
+                    1600: { icCap: 1411.8, filler: 0, geriDolgu: 0 }
+                }
+            },
+            "PE 16 ATÜ": {
+                C: 150, limit: 160,
+                caplar: {
+                    32: { icCap: 26, filler: 0, geriDolgu: 0 },
+                    40: { icCap: 32.6, filler: 0, geriDolgu: 0 },
+                    50: { icCap: 40.8, filler: 0, geriDolgu: 0 },
+                    63: { icCap: 51.4, filler: 964.5349, geriDolgu: 559.158 },
+                    75: { icCap: 61.4, filler: 0, geriDolgu: 0 },
+                    90: { icCap: 73.6, filler: 1339.313, geriDolgu: 935.4489 },
+                    110: { icCap: 90, filler: 1543.957, geriDolgu: 1141.557 },
+                    125: { icCap: 102.2, filler: 0, geriDolgu: 0 },
+                    140: { icCap: 114.6, filler: 1983.378, geriDolgu: 1524.395 },
+                    160: { icCap: 130.8, filler: 2251.872, geriDolgu: 1795.085 },
+                    180: { icCap: 147.2, filler: 0, geriDolgu: 0 },
+                    200: { icCap: 163.6, filler: 3008.001, geriDolgu: 2493.767 },
+                    225: { icCap: 184, filler: 0, geriDolgu: 0 },
+                    250: { icCap: 204.6, filler: 4298.711, geriDolgu: 3726.604 },
+                    280: { icCap: 229.2, filler: 0, geriDolgu: 0 },
+                    315: { icCap: 257.8, filler: 6168.822, geriDolgu: 5540.661 },
+                    355: { icCap: 290.6, filler: 0, geriDolgu: 0 },
+                    400: { icCap: 327.4, filler: 0, geriDolgu: 0 },
+                    450: { icCap: 368.2, filler: 0, geriDolgu: 0 },
+                    500: { icCap: 409.2, filler: 0, geriDolgu: 0 },
+                    560: { icCap: 458.4, filler: 0, geriDolgu: 0 },
+                    630: { icCap: 515.6, filler: 0, geriDolgu: 0 },
+                    710: { icCap: 581, filler: 0, geriDolgu: 0 },
+                    800: { icCap: 654.6, filler: 0, geriDolgu: 0 },
+                    900: { icCap: 736.4, filler: 0, geriDolgu: 0 },
+                    1000: { icCap: 818.2, filler: 0, geriDolgu: 0 },
+                    1200: { icCap: 981.8, filler: 0, geriDolgu: 0 },
+                    1400: { icCap: 1145.4, filler: 0, geriDolgu: 0 },
+                    1600: { icCap: 1309, filler: 0, geriDolgu: 0 }
+                }
+            },
+            "DUKTİL": {
+                C: 130, limit: 250,
+                caplar: {
+                    80: { icCap: 80, filler: 2709.288, geriDolgu: 1926.763 },
+                    100: { icCap: 100, filler: 2669.727, geriDolgu: 1882.378 },
+                    125: { icCap: 125, filler: 0, geriDolgu: 0 },
+                    150: { icCap: 150, filler: 3851.406, geriDolgu: 2997.618 },
+                    200: { icCap: 200, filler: 4640.49, geriDolgu: 3717.938 },
+                    250: { icCap: 250, filler: 5932.413, geriDolgu: 4939.47 },
+                    300: { icCap: 300, filler: 7413.762, geriDolgu: 6349.135 },
+                    350: { icCap: 350, filler: 9089.205, geriDolgu: 7947.551 },
+                    400: { icCap: 400, filler: 10097.6, geriDolgu: 8877.577 },
+                    450: { icCap: 450, filler: 11593.8, geriDolgu: 10295.44 },
+                    500: { icCap: 500, filler: 13262.6, geriDolgu: 11518.12 },
+                    600: { icCap: 600, filler: 17224.72, geriDolgu: 15305.62 },
+                    700: { icCap: 700, filler: 22645.52, geriDolgu: 20545.34 },
+                    800: { icCap: 800, filler: 20975.07, geriDolgu: 18677.23 },
+                    900: { icCap: 900, filler: 0, geriDolgu: 0 },
+                    1000: { icCap: 1000, filler: 29888.66, geriDolgu: 27197.69 },
+                    1100: { icCap: 1100, filler: 0, geriDolgu: 0 },
+                    1200: { icCap: 1200, filler: 37633.57, geriDolgu: 34524.5 },
+                    1400: { icCap: 1400, filler: 44529.62, geriDolgu: 40979.91 },
+                    1500: { icCap: 1500, filler: 0, geriDolgu: 0 },
+                    1600: { icCap: 1600, filler: 0, geriDolgu: 0 },
+                    1800: { icCap: 1800, filler: 0, geriDolgu: 0 },
+                    2000: { icCap: 2000, filler: 0, geriDolgu: 0 },
+                    2200: { icCap: 2200, filler: 0, geriDolgu: 0 }
+                }
+            },
+            "ÇELİK": {
+                C: 130, limit: 400,
+                caplar: {
+                    100: { icCap: 100, filler: 2948.84, geriDolgu: 2463.91 },
+                    150: { icCap: 150, filler: 3715.121, geriDolgu: 3162.081 },
+                    200: { icCap: 200, filler: 4169.138, geriDolgu: 3550.556 },
+                    250: { icCap: 250, filler: 4853.19, geriDolgu: 4164.183 },
+                    300: { icCap: 300, filler: 5554.339, geriDolgu: 4786.738 },
+                    350: { icCap: 350, filler: 6286.686, geriDolgu: 5444.301 },
+                    400: { icCap: 397.4, filler: 7159.658, geriDolgu: 6240.929 },
+                    450: { icCap: 447, filler: 0, geriDolgu: 0 },
+                    500: { icCap: 496.8, filler: 9526.014, geriDolgu: 8091.358 },
+                    550: { icCap: 546.4, filler: 0, geriDolgu: 0 },
+                    600: { icCap: 597.4, filler: 11831.77, geriDolgu: 10214.91 },
+                    650: { icCap: 645.8, filler: 0, geriDolgu: 0 },
+                    700: { icCap: 695, filler: 14279.56, geriDolgu: 12470.16 },
+                    750: { icCap: 746, filler: 0, geriDolgu: 0 },
+                    800: { icCap: 795.4, filler: 17533.13, geriDolgu: 15533.09 },
+                    850: { icCap: 844, filler: 0, geriDolgu: 0 },
+                    900: { icCap: 894, filler: 20744.69, geriDolgu: 18605.62 },
+                    1000: { icCap: 1000, filler: 23913.17, geriDolgu: 21504.98 },
+                    1100: { icCap: 1093, filler: 26901.16, geriDolgu: 24291.86 },
+                    1200: { icCap: 1200, filler: 32458.31, geriDolgu: 29641.65 },
+                    1300: { icCap: 1289, filler: 37971.08, geriDolgu: 34940.83 },
+                    1400: { icCap: 1400, filler: 46397.88, geriDolgu: 43147.8 },
+                    1500: { icCap: 1492, filler: 50582.52, geriDolgu: 47111.44 },
+                    1600: { icCap: 1591, filler: 57258.94, geriDolgu: 53560.62 },
+                    1700: { icCap: 1687, filler: 62926.4, geriDolgu: 58994.6 },
+                    1800: { icCap: 1800, filler: 68600.42, geriDolgu: 64433.97 },
+                    1900: { icCap: 1890, filler: 76292.99, geriDolgu: 71885.66 },
+                    2000: { icCap: 1987.6, filler: 85750.83, geriDolgu: 81096.38 },
+                    2100: { icCap: 2089, filler: 0, geriDolgu: 0 },
+                    2200: { icCap: 2185, filler: 0, geriDolgu: 0 },
+                    2300: { icCap: 2287, filler: 0, geriDolgu: 0 },
+                    2400: { icCap: 2382, filler: 0, geriDolgu: 0 },
+                    2500: { icCap: 2484, filler: 0, geriDolgu: 0 }
+                }
+            }
+        };
+
+        let hidrolikChartInstance = null;
+
+        function formatTR(val, decimals = 2) {
+            if (isNaN(val) || val === null || val === undefined) return "0";
+            return Number(val).toLocaleString('tr-TR', {
+                minimumFractionDigits: decimals,
+                maximumFractionDigits: decimals
+            });
+        }
+
+        function getAtuInfo(basincOrani) {
+            if (basincOrani < 9) return { text: "10 ATÜ", css: "bg-blue" };
+            else if (basincOrani < 15) return { text: "16 ATÜ", css: "bg-orange" };
+            else if (basincOrani <= 25) return { text: "DUKTİL", css: "bg-red-atu" };
+            else return { text: "YÜKSEK BASINÇ", css: "bg-red-atu" };
+        }
+
+        function girisYap() {
+            let uInput = document.getElementById("username").value.trim().toLowerCase('tr-TR');
+            let pInput = document.getElementById("password").value.trim();
+            let err = document.getElementById("loginError");
+
+            if (KULLANICILAR[uInput] && String(KULLANICILAR[uInput]) === pInput) {
+                document.getElementById("loginScreen").style.display = "none";
+                document.getElementById("appScreen").style.display = "block";
+                projeleriYukleSelect();
+                boruCinsiDegisti();
+                err.innerText = "";
+            } else {
+                err.innerText = "Kullanıcı adı veya şifre hatalı!";
+            }
+        }
+
+        function projeleriYukleSelect() {
+            const select = document.getElementById('projeListesi');
+            select.innerHTML = '<option value="">-- Kayıtlı Projeler --</option>';
+            const projeler = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+            for (let name in projeler) {
+                let opt = document.createElement('option');
+                opt.value = name;
+                opt.textContent = name;
+                select.appendChild(opt);
+            }
+        }
+
+        function projeKaydet() {
+            let name = document.getElementById('projeAdi').value.trim();
+            if (!name) { alert('Lütfen bir proje adı giriniz!'); return; }
+
+            const data = {
+                akisTipi: document.getElementById('akisTipi').value,
+                maliyetTipi: document.getElementById('maliyetTipi').value,
+                kot1: document.getElementById('kot1').value,
+                kot2: document.getElementById('kot2').value,
+                hatUzunlugu: document.getElementById('hatUzunlugu').value,
+                yerselKayipYuzde: document.getElementById('yerselKayipYuzde').value,
+                dokusBasinci: document.getElementById('dokusBasinci').value,
+                boruCinsi: document.getElementById('boruCinsi').value,
+                disCap: document.getElementById('disCap').value,
+                debi: document.getElementById('debi').value,
+                enerjiBirimMaliyeti: document.getElementById('enerjiBirimMaliyeti').value,
+                pompaCalismaGunu: document.getElementById('pompaCalismaGunu').value,
+                pompaCalismaSaati: document.getElementById('pompaCalismaSaati').value,
+                analizYili: document.getElementById('analizYili').value
+            };
+
+            let projeler = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+            projeler[name] = data;
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(projeler));
+
+            projeleriYukleSelect();
+            document.getElementById('projeListesi').value = name;
+            alert('Proje "' + name + '" başarıyla kaydedildi!');
+        }
+
+        function projeYukle() {
+            let name = document.getElementById('projeListesi').value;
+            if (!name) return;
+
+            let projeler = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+            let data = projeler[name];
+            if (!data) return;
+
+            document.getElementById('projeAdi').value = name;
+            document.getElementById('akisTipi').value = data.akisTipi || 'TERFİLİ';
+            document.getElementById('maliyetTipi').value = data.maliyetTipi || 'FILLER';
+            document.getElementById('kot1').value = data.kot1 || 1040;
+            document.getElementById('kot2').value = data.kot2 || 1000;
+            document.getElementById('hatUzunlugu').value = data.hatUzunlugu || 10000;
+            document.getElementById('yerselKayipYuzde').value = data.yerselKayipYuzde || 10;
+            document.getElementById('dokusBasinci').value = data.dokusBasinci || 15;
+            document.getElementById('boruCinsi').value = data.boruCinsi || 'PE 10 ATÜ';
+
+            boruCinsiDegisti();
+
+            if (data.disCap) document.getElementById('disCap').value = data.disCap;
+            document.getElementById('debi').value = data.debi || 5;
+            document.getElementById('enerjiBirimMaliyeti').value = data.enerjiBirimMaliyeti || 5.25;
+            document.getElementById('pompaCalismaGunu').value = data.pompaCalismaGunu || 365;
+            document.getElementById('pompaCalismaSaati').value = data.pompaCalismaSaati || 20;
+            document.getElementById('analizYili').value = (data.analizYili !== undefined) ? data.analizYili : 35;
+
+            akisTipiDegisti();
+        }
+
+        function projeSil() {
+            let name = document.getElementById('projeListesi').value;
+            if (!name) { alert('Lütfen silmek istediğiniz projeyi listeden seçiniz!'); return; }
+            if (confirm('"' + name + '" isimli projeyi silmek istediğinize emin misiniz?')) {
+                let projeler = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+                delete projeler[name];
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(projeler));
+                document.getElementById('projeAdi').value = '';
+                projeleriYukleSelect();
+                alert('Proje silindi.');
+            }
+        }
+
+        function akisTipiDegisti() {
+            const akisTipi = document.getElementById('akisTipi').value;
+            const enerjiTablo = document.getElementById('enerjiTabloBolumu');
+            const toplamYatirimBolumu = document.getElementById('toplamYatirimBolumu');
+
+            if (akisTipi === "CAZİBELİ") {
+                enerjiTablo.style.display = "none";
+                toplamYatirimBolumu.style.display = "none";
+                // analizToplamBolumu görünürlüğü hesapla() içerisinde yönetilecek
+            } else {
+                enerjiTablo.style.display = "block";
+                toplamYatirimBolumu.style.display = "block";
+            }
+            hesapla();
+        }
+
+        function boruCinsiDegisti() {
+            const boruCinsi = document.getElementById('boruCinsi').value;
+            const disCapSelect = document.getElementById('disCap');
+            disCapSelect.innerHTML = "";
+            const caplar = KATALOG[boruCinsi] ? KATALOG[boruCinsi].caplar : {};
+            for (let cap in caplar) {
+                let opt = document.createElement("option");
+                opt.value = cap; opt.text = cap;
+                disCapSelect.appendChild(opt);
+            }
+            if (caplar[160]) disCapSelect.value = 160;
+            hesapla();
+        }
+
+        function hesapla() {
+            const akisTipi = document.getElementById('akisTipi').value;
+            const maliyetTipi = document.getElementById('maliyetTipi').value;
+            const kot1 = parseFloat(document.getElementById('kot1').value) || 0;
+            const kot2 = parseFloat(document.getElementById('kot2').value) || 0;
+            const hatUzunlugu = parseFloat(document.getElementById('hatUzunlugu').value) || 0;
+            const boruCinsi = document.getElementById('boruCinsi').value;
+            const disCap = parseFloat(document.getElementById('disCap').value) || 0;
+            const yerselKayipYuzde = parseFloat(document.getElementById('yerselKayipYuzde').value) || 0;
+            const debi = parseFloat(document.getElementById('debi').value) || 0;
+            const dokusBasinci = parseFloat(document.getElementById('dokusBasinci').value) || 0;
+
+            const kotFarki = Math.abs(kot1 - kot2);
+            document.getElementById('kotFarki').innerText = formatTR(kotFarki, 0);
+
+            const katalogBilgi = (KATALOG[boruCinsi] && KATALOG[boruCinsi].caplar[disCap]) ? KATALOG[boruCinsi].caplar[disCap] : { icCap: 0, filler: 0, geriDolgu: 0 };
+            const icCap = katalogBilgi.icCap;
+            const cKatsayisi = KATALOG[boruCinsi] ? KATALOG[boruCinsi].C : 0;
+
+            document.getElementById('icCap').innerText = formatTR(icCap, 0);
+
+            const alan = Math.PI * Math.pow(icCap / 1000, 2) / 4;
+            const hiz = alan > 0 ? (debi / 1000) / alan : 0;
+            document.getElementById('hiz').innerText = formatTR(hiz, 2);
+
+            const sabitHizDebi = alan * 1 * 1000;
+            document.getElementById('sabitHizDebi').innerText = formatTR(sabitHizDebi, 2);
+
+            let qKapasite = 0;
+            if (hatUzunlugu > 0) {
+                qKapasite = 0.279 * cKatsayisi * Math.pow(icCap / 1000, 2.63) * Math.pow(kotFarki / hatUzunlugu, 0.54) / (1 + (yerselKayipYuzde / 100)) * 1000;
+            }
+            const qKapasiteEl = document.getElementById('qKapasite');
+            qKapasiteEl.innerText = formatTR(qKapasite, 2);
+            qKapasiteEl.className = (debi > qKapasite) ? "bg-red-status" : "bg-green-status";
+
+            let J = 0;
+            if (cKatsayisi > 0 && icCap > 0 && hiz > 0) {
+                J = 6.824 * Math.pow(hiz, 1.852) / (Math.pow(cKatsayisi, 1.852) * Math.pow(icCap / 1000, 1.167));
+            }
+            document.getElementById('hidrolikEgim').innerText = formatTR(J, 4);
+
+            const L_toplam = hatUzunlugu * (1 + (yerselKayipYuzde / 100));
+            const JL = J * L_toplam;
+            document.getElementById('surekliYukKaybi').innerText = formatTR(JL, 2);
+
+            let piyezometreBas = 0, piyezometreSon = 0, uctaDinamikBasinc = 0;
+            if (akisTipi === "CAZİBELİ") {
+                piyezometreBas = kot1;
+                piyezometreSon = kot1 - JL;
+                uctaDinamikBasinc = piyezometreSon - kot2;
+            } else {
+                piyezometreBas = kot1 + kotFarki + JL + dokusBasinci;
+                piyezometreSon = kot2 + dokusBasinci;
+                uctaDinamikBasinc = piyezometreBas - piyezometreSon + dokusBasinci;
+            }
+
+            document.getElementById('piyezometreBas').innerText = formatTR(piyezometreBas, 2);
+            document.getElementById('piyezometreSon').innerText = formatTR(piyezometreSon, 2);
+            
+            const dinamikEl = document.getElementById('uctaDinamikBasinc');
+            dinamikEl.innerText = formatTR(uctaDinamikBasinc, 2);
+            const limitBasinc = KATALOG[boruCinsi] ? KATALOG[boruCinsi].limit : 100;
+            dinamikEl.className = (uctaDinamikBasinc < 0 || uctaDinamikBasinc > limitBasinc) ? "bg-red-status" : "bg-green-status";
+
+            const statikInfo = getAtuInfo(kotFarki / 10);
+            const statikAtuEl = document.getElementById('statikAtu');
+            statikAtuEl.innerText = statikInfo.text; statikAtuEl.className = statikInfo.css;
+
+            const dinamikInfo = getAtuInfo(uctaDinamikBasinc / 10);
+            const dinamikAtuEl = document.getElementById('dinamikAtu');
+            dinamikAtuEl.innerText = dinamikInfo.text; dinamikAtuEl.className = dinamikInfo.css;
+
+            guncelleGrafik({
+                akisTipi, hatUzunlugu, kot1, kot2, piyezometreBas, piyezometreSon,
+                boruCinsi, disCap, icCap, debi, hiz, JL, uctaDinamikBasinc, dinamikAtuText: dinamikInfo.text
+            });
+
+            // MALİYET
+            const birimFiyat = (maliyetTipi === "FILLER") ? (katalogBilgi.filler || 0) : (katalogBilgi.geriDolgu || 0);
+            document.getElementById('secilenBirimFiyat').innerText = formatTR(birimFiyat, 2);
+            const yaklasikMaliyet = birimFiyat * hatUzunlugu;
+            document.getElementById('secilenYaklasikMaliyet').innerText = formatTR(yaklasikMaliyet, 2);
+
+            const analizToplamBolumu = document.getElementById('analizToplamBolumu');
+
+            if (akisTipi === "TERFİLİ") {
+                const enerjiBirimMaliyeti = parseFloat(document.getElementById('enerjiBirimMaliyeti').value) || 0;
+                const pompaCalismaGunu = parseFloat(document.getElementById('pompaCalismaGunu').value) || 0;
+                const pompaCalismaSaati = parseFloat(document.getElementById('pompaCalismaSaati').value) || 0;
+                
+                let analizYiliVal = document.getElementById('analizYili').value;
+                const analizYili = (analizYiliVal === "" || isNaN(analizYiliVal)) ? 0 : parseFloat(analizYiliVal);
+
+                let kw = (debi * uctaDinamikBasinc) / 102 / 0.8 * 1.1;
+                const kwYuvarla = Math.ceil(kw);
+                document.getElementById('kwHesaplanan').innerText = formatTR(kw, 2);
+                document.getElementById('kwYuvarlama').innerText = formatTR(kwYuvarla, 0);
+
+                const enerjiGideri1Yil = enerjiBirimMaliyeti * pompaCalismaGunu * pompaCalismaSaati * kwYuvarla;
+                document.getElementById('enerjiGideri1Yil').innerText = formatTR(enerjiGideri1Yil, 0);
+
+                const ilkYatirimBoru = Math.round(yaklasikMaliyet);
+                const toplamIlkYatirim = ilkYatirimBoru + enerjiGideri1Yil;
+                document.getElementById('toplamIlkYatirim').innerText = formatTR(toplamIlkYatirim, 0);
+                document.getElementById('birimMetreIlkYatirim').innerText = formatTR(hatUzunlugu > 0 ? (toplamIlkYatirim / hatUzunlugu) : 0, 2);
+
+                if (analizYili > 0) {
+                    analizToplamBolumu.style.display = "block";
+                    const enerjiGideriAnalizYil = enerjiGideri1Yil * analizYili;
+                    document.getElementById('enerjiGideriAnalizYil').innerText = formatTR(enerjiGideriAnalizYil, 0);
+                    const toplamAnalizYatirim = ilkYatirimBoru + enerjiGideriAnalizYil;
+                    document.getElementById('toplamAnalizYatirim').innerText = formatTR(toplamAnalizYatirim, 0);
+                    document.getElementById('birimMetreAnalizYatirim').innerText = formatTR(hatUzunlugu > 0 ? (toplamAnalizYatirim / hatUzunlugu) : 0, 2);
+                } else {
+                    analizToplamBolumu.style.display = "none";
+                    document.getElementById('enerjiGideriAnalizYil').innerText = "-";
+                }
+            } else {
+                analizToplamBolumu.style.display = "none";
+            }
+        }
+
+        function guncelleGrafik(p) {
+            const cardEl = document.getElementById('chartInfoCard');
+            cardEl.innerHTML = `
+                <span><strong>Akış:</strong> ${p.akisTipi}</span>
+                <span><strong>Boru:</strong> ${p.boruCinsi} (Ø${p.disCap} / d:${formatTR(p.icCap, 0)}mm)</span>
+                <span><strong>Debi:</strong> ${formatTR(p.debi, 1)} lt/sn</span>
+                <span><strong>Hız:</strong> ${formatTR(p.hiz, 2)} m/sn</span>
+                <span><strong>Yük Kaybı (JL):</strong> ${formatTR(p.JL, 2)} m</span>
+                <span style="color:#d9534f;"><strong>Uçta Din. Basınç:</strong> ${formatTR(p.uctaDinamikBasinc, 2)} m</span>
+                <span><strong>Dinamik ATÜ:</strong> ${p.dinamikAtuText}</span>
+            `;
+
+            const datasets = [
+                { label: 'Piyezometre (HGL)', data: [{ x: 0, y: p.piyezometreBas }, { x: p.hatUzunlugu, y: p.piyezometreSon }], borderColor: '#0055ff', backgroundColor: '#0055ff', borderWidth: 2.5, pointRadius: 4, pointBackgroundColor: '#0055ff', fill: false, tension: 0 },
+                { label: 'Arazi Kot Profili', data: [{ x: 0, y: p.kot1 }, { x: p.hatUzunlugu, y: p.kot2 }], borderColor: '#78350f', backgroundColor: 'rgba(120, 53, 15, 0.12)', borderWidth: 2, borderDash: [4, 4], pointRadius: 3, pointBackgroundColor: '#78350f', fill: true, tension: 0 }
+            ];
+
+            if (p.akisTipi === "TERFİLİ") {
+                datasets.push({ label: 'Döküş Kotu', data: [{ x: 0, y: p.kot2 }, { x: p.hatUzunlugu, y: p.kot2 }], borderColor: '#c026d3', borderWidth: 1.5, borderDash: [5, 5], pointRadius: 0, fill: false });
+            }
+
+            const customTicks = function(scale) {
+                const step = p.hatUzunlugu / 4;
+                scale.ticks = [ { value: 0 }, { value: Math.round(step) }, { value: Math.round(step * 2) }, { value: Math.round(step * 3) }, { value: p.hatUzunlugu } ];
+            };
+
+            const ctx = document.getElementById('hidrolikGrafik').getContext('2d');
+            
+            const datalabelsConfig = {
+                display: function(context) { return context.datasetIndex < 2; },
+                color: function(context) { return context.dataset.borderColor; },
+                font: { size: 10, weight: 'bold' },
+                align: 'top', // Etiketi daima çizginin/noktanın üstüne koyar
+                anchor: 'center',
+                offset: 8, // Çizgiye değmemesi için verilen aralık
+                formatter: function(value, context) {
+                    const dIdx = context.datasetIndex, idx = context.dataIndex;
+                    if (dIdx === 0) return formatTR(idx === 0 ? p.piyezometreBas : p.piyezometreSon, 0) + 'm';
+                    if (dIdx === 1) return formatTR(idx === 0 ? p.kot1 : p.kot2, 0) + 'm';
+                    return '';
+                }
+            };
+
+            if (hidrolikChartInstance) {
+                hidrolikChartInstance.data.datasets = datasets;
+                hidrolikChartInstance.options.scales.x.min = 0;
+                hidrolikChartInstance.options.scales.x.max = p.hatUzunlugu;
+                hidrolikChartInstance.options.scales.x.afterBuildTicks = customTicks;
+                hidrolikChartInstance.options.plugins.datalabels = datalabelsConfig;
+                hidrolikChartInstance.update();
+            } else {
+                hidrolikChartInstance = new Chart(ctx, {
+                    type: 'line', data: { datasets: datasets },
+                    options: {
+                        layout: {
+                            padding: { top: 25, left: 20, right: 20 } // Taşmaları önleyen görünmez çerçeve boşluğu
+                        },
+                        responsive: true, maintainAspectRatio: false, animation: { duration: 200 },
+                        scales: {
+                            x: { type: 'linear', position: 'bottom', title: { display: true, text: 'Mesafe (m)', font: { weight: 'bold' } } },
+                            y: { grace: '12%', title: { display: true, text: 'Kot (m)', font: { weight: 'bold' } } }
+                        },
+                        plugins: { legend: { position: 'top' }, datalabels: datalabelsConfig }
+                    }
+                });
+            }
+        }
+
+        // === AKILLI PDF İNDİRME ===
+        function pdfIndir() {
+            const element = document.getElementById('pdfArea');
+            
+            // 1. Ekranı PDF uyumlu kompakt CSS class'ı ile daralt
+            element.classList.add('pdf-mode-active');
+            
+            // 2. Grafiğin yeni boyutuna göre resize olması için minik bir gecikme ver
+            setTimeout(() => {
+                const opt = {
+                    margin:       [3, 3, 3, 3], 
+                    filename:     'icme_suyu_hidrolik_hesap.pdf',
+                    image:        { type: 'jpeg', quality: 1.0 },
+                    html2canvas:  { scale: 2, useCORS: true, logging: false },
+                    jsPDF:        { unit: 'mm', format: 'a4', orientation: 'landscape' }
+                };
+
+                html2pdf().set(opt).from(element).save().then(() => {
+                    // 3. PDF inince tekrar geniş/okunaklı görünüme çevir
+                    element.classList.remove('pdf-mode-active');
+                });
+            }, 100);
+        }
+
+        function jsonIndir() {
+            let name = document.getElementById('projeAdi').value.trim();
+            if (!name) { alert('Lütfen indirmek istediğiniz projeyi listeden seçin veya önce kaydedin!'); return; }
+            let projeler = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+            let data = projeler[name];
+            if (!data) { alert('Bu proje henüz kaydedilmemiş.'); return; }
+            data.projeAdi = name; 
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data, null, 2));
+            const downloadAnchorNode = document.createElement('a');
+            downloadAnchorNode.setAttribute("href", dataStr);
+            downloadAnchorNode.setAttribute("download", name + "_proje.json");
+            document.body.appendChild(downloadAnchorNode);
+            downloadAnchorNode.click();
+            downloadAnchorNode.remove();
+        }
+
+        function jsonYukle(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    let name = data.projeAdi || file.name.replace('.json', '').replace('_proje', '');
+                    let projeler = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+                    projeler[name] = data;
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(projeler));
+                    projeleriYukleSelect();
+                    document.getElementById('projeListesi').value = name;
+                    projeYukle(); 
+                    alert('Proje başarıyla yüklendi: ' + name);
+                } catch (error) { alert('Hata: Geçersiz JSON dosyası!'); }
+                event.target.value = '';
+            };
+            reader.readAsText(file);
+        }
+    </script>
+</body>
+</html>
